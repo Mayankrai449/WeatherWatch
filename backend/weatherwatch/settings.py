@@ -12,9 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from celery.schedules import crontab
-from decouple import Config
+from decouple import config
 
-config = Config()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -125,13 +124,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [(config('REDIS_HOST'), int(config('REDIS_PORT')))]},
-    },
-}
-
 CELERY_BROKER_URL = config('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
@@ -140,6 +132,11 @@ CELERY_BEAT_SCHEDULE = {
     'publish-scheduled-posts': {
         'task': 'weatherapp.tasks.fetch_weather_data',
         'schedule': 10.0,
+    },
+    'save_daily_weather_summary': {
+        'task': 'weatherapp.tasks.save_daily_weather_summary',
+        'schedule': 10.0,
+        # 'schedule': crontab(hour=0, minute=0),  # Runs daily at midnight
     },
 }
 
