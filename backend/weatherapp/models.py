@@ -29,8 +29,14 @@ class DailyWeatherSummary(models.Model):
         unique_together = ['city', 'date']
 
 class AlertConfiguration(models.Model):
+    CONDITION_CHOICES = [
+        ('temperature', 'Temperature'),
+        ('wind_speed', 'Wind Speed'),
+        ('humidity', 'Humidity')
+    ]
+
     name = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
-    condition_type = models.CharField(max_length=50)
+    condition_type = models.CharField(max_length=50, choices=CONDITION_CHOICES)
     threshold = models.FloatField()
     enabled = models.BooleanField(default=True)

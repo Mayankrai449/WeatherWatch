@@ -29,3 +29,18 @@ class DailySummaryView(APIView):
             cache.set(cache_key, data, timeout=3600)
 
         return Response(data, status=status.HTTP_200_OK)
+    
+class AlertCreateAPIView(APIView):
+    def post(self, request):
+        serializer = AlertConfigurationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()                                                   # Save the alert configuration
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AlertListAPIView(APIView):
+    def get(self, request):
+        alerts = AlertConfiguration.objects.all().order_by('-enabled')
+        serializer = AlertConfigurationSerializer(alerts, many=True)             # Get all the alerts
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -2,7 +2,7 @@ import requests
 from celery import shared_task
 from django.utils import timezone
 from django.core.mail import send_mail
-from django.db.models import Avg, Max, Min, Count
+from django.db.models import Avg, Max, Min
 from collections import Counter
 from .models import *
 from django.conf import settings
@@ -16,7 +16,7 @@ def fetch_weather_data():
         response = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}")   # Fetch the weather data
         data = response.json()
         
-        WeatherReading.objects.create(                                           # Create a new reading 
+        reading = WeatherReading.objects.create(                                           # Create a new reading 
             city=city,
             timestamp=timezone.now(),
             temperature=data["main"]["temp"] - 273.15,
@@ -25,6 +25,8 @@ def fetch_weather_data():
             humidity=data["main"].get("humidity"),
             wind_speed=data["wind"].get("speed"),
         )
+        
+        alert_threshold_checker.delay(city, reading.id)                                 # Check for alert thresholds
         
 @shared_task
 def save_daily_weather_summary():
@@ -57,3 +59,28 @@ def save_daily_weather_summary():
                     'readings_count': readings.count(),
                 }
             )
+            
+
+@shared_task
+def alert_threshold_checker(city, reading_id):
+
+    reading = WeatherReading.objects.get(id=reading_id)
+    alerts = AlertConfiguration.objects.filter(city=city, enabled=True)
+
+    for alert in alerts:
+        alert_triggered = False
+
+        # Threshold check based on the condition type
+        if alert.condition_type == 'temperature' and reading.temperature > alert.threshold:
+            alert_triggered = True
+        elif alert.condition_type == 'wind_speed' and reading.wind_speed > alert.threshold:
+            alert_triggered = True
+        elif alert.condition_type == 'humidity' and reading.humidity > alert.threshold:
+            alert_triggered = True
+
+        if alert_triggered:
+            trigger_alert(alert)           # Trigger the alert
+
+def trigger_alert(alert):
+
+    print(f"Alert Triggered: {alert.name} - {alert.condition_type} threshold exceeded in {alert.city}.")
