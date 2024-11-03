@@ -6,7 +6,7 @@ A real-time data processing system built with Django, React.js, PostgreSQL that 
 
 ## Features
 
-* 🌦️ Continuous weather data collection from OpenWeatherMap
+* 🌦️ Continuous weather data collection from OpenWeatherMap (Temperature, Humidity, Wind Speed, etc.)
 * 📊 Daily summaries with temperature aggregates and dominant weather conditions
 * ⚠️ Real-time alerting based on configurable weather thresholds
 * 📈 Visualizations for daily summaries
@@ -17,7 +17,7 @@ A real-time data processing system built with Django, React.js, PostgreSQL that 
 ## System Architecture
 
 ### Backend (Django)
-* REST API endpoints for accessing weather summaries and alerts
+* REST API endpoints for accessing weather summaries and alerts (With Caching)
 * Database storage for raw weather readings and daily summaries
 * Integration with Celery and Redis for asynchronous task scheduling
 
@@ -118,7 +118,7 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 ## Usage
 
 ### 1. Weather Data Collection
-The system continuously fetches weather data at regular intervals (e.g., every 5 minutes) for major Indian cities like Delhi, Mumbai, and others.
+The system continuously fetches weather data at regular intervals (e.g., every 5 minutes) for major Indian cities like Delhi, Mumbai, and others. (Temperature, Humidity, Wind Speed, etc.)
 
 ### 2. Daily Weather Summaries
 Rollups are created daily, including:
