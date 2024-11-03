@@ -1,0 +1,3 @@
+web: python manage.py runserver
+worker: celery -A weatherwatch worker
+beat: celery -A weatherwatch beat

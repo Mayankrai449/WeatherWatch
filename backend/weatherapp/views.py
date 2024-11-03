@@ -14,7 +14,7 @@ class LiveWeatherView(APIView):
             readings = WeatherReading.objects.filter(city=city).order_by('-timestamp')[:1]              # Get the latest reading
             if readings.exists():
                 data = WeatherReadingSerializer(readings.first()).data                                  
-                cache.set(cache_key, data, timeout=30)
+                cache.set(cache_key, data, timeout=300)
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -26,7 +26,7 @@ class DailySummaryView(APIView):
         if not data:
             summaries = DailyWeatherSummary.objects.filter(city=city).order_by('-date')[:7]         # Get the last 7 days' summaries
             data = DailyWeatherSummarySerializer(summaries, many=True).data
-            cache.set(cache_key, data, timeout=3600)
+            cache.set(cache_key, data, timeout=300)
 
         return Response(data, status=status.HTTP_200_OK)
     

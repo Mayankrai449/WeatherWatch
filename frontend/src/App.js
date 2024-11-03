@@ -1,21 +1,24 @@
-// /src/App.js
 import React from 'react';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
 import LiveWeather from './components/LiveWeather';
-import WeatherSummary from './components/WeatherSummary';
-import AlertForm from './components/AlertForm';
+import Summary from './components/Summary';
+import Alerts from './components/Alerts';
+import './App.css';
 
 function App() {
-  return (
-    <div className="App">
-      <h1>Weather Monitoring Dashboard</h1>
-      <div className="weather-container">
-        <LiveWeather />
-        <WeatherSummary />
-      </div>
-      <AlertForm />
-    </div>
-  );
+    return (
+        <Router>
+            <Navbar />
+            <div className="container">
+                <Routes>
+                    <Route path="/" element={<LiveWeather />} />
+                    <Route path="/summary" element={<Summary />} />
+                    <Route path="/alerts" element={<Alerts />} />
+                </Routes>
+            </div>
+        </Router>
+    );
 }
 
 export default App;

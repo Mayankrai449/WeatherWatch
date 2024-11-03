@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from celery.schedules import crontab
-from decouple import config
+from decouple import config, Csv
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,9 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
-
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv())
 
 
 # Application definition
@@ -39,21 +38,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'weatherapp',
     'django_celery_beat',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'weatherwatch.urls'
@@ -131,12 +130,11 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULE = {
     'publish-scheduled-posts': {
         'task': 'weatherapp.tasks.fetch_weather_data',
-        'schedule': 10.0,
+        'schedule': 300.0,  # Runs every 5 minutes
     },
     'save_daily_weather_summary': {
         'task': 'weatherapp.tasks.save_daily_weather_summary',
-        'schedule': 10.0,
-        # 'schedule': crontab(hour=0, minute=0),  # Runs daily at midnight
+        'schedule': crontab(hour=0, minute=0),  # Runs daily at midnight
     },
 }
 

@@ -13,41 +13,48 @@ def fetch_weather_data():
     api_key = settings.OPENWEATHERMAP_API_KEY
     
     for city in cities:
-        response = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}")   # Fetch the weather data
+        response = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}")
         data = response.json()
         
-        reading = WeatherReading.objects.create(                                           # Create a new reading 
+        # Round temperature and other relevant values to 1 decimal place
+        temperature = round(data["main"]["temp"] - 273.15, 1)
+        feels_like = round(data["main"]["feels_like"] - 273.15, 1)
+        humidity = round(data["main"].get("humidity", 0), 1)
+        wind_speed = round(data["wind"].get("speed", 0), 1)
+        
+        reading = WeatherReading.objects.create(
             city=city,
             timestamp=timezone.now(),
-            temperature=data["main"]["temp"] - 273.15,
-            feels_like=data["main"]["feels_like"] - 273.15,
+            temperature=temperature,
+            feels_like=feels_like,
             main_condition=data["weather"][0]["main"],
-            humidity=data["main"].get("humidity"),
-            wind_speed=data["wind"].get("speed"),
+            humidity=humidity,
+            wind_speed=wind_speed,
         )
         
-        alert_threshold_checker.delay(city, reading.id)                                 # Check for alert thresholds
-        
+        alert_threshold_checker.delay(city, reading.id)
+
 @shared_task
 def save_daily_weather_summary():
     cities = ["Delhi", "Mumbai", "Chennai", "Bangalore", "Kolkata", "Hyderabad"]
     today = timezone.now().date()
 
     for city in cities:
-        readings = WeatherReading.objects.filter(                   # Filter the readings for the city and date
+        readings = WeatherReading.objects.filter(
             city=city,  
             timestamp__date=today
         )
 
         if readings.exists():
-            avg_temp = readings.aggregate(Avg('temperature'))['temperature__avg']
-            max_temp = readings.aggregate(Max('temperature'))['temperature__max']
-            min_temp = readings.aggregate(Min('temperature'))['temperature__min']
+            # Calculate and round averages, min, max to 1 decimal place
+            avg_temp = round(readings.aggregate(Avg('temperature'))['temperature__avg'], 1)
+            max_temp = round(readings.aggregate(Max('temperature'))['temperature__max'], 1)
+            min_temp = round(readings.aggregate(Min('temperature'))['temperature__min'], 1)
 
             conditions = readings.values_list('main_condition', flat=True)
-            dominant_condition = Counter(conditions).most_common(1)[0][0]               # Get the most common condition
+            dominant_condition = Counter(conditions).most_common(1)[0][0]
             
-            summary, created = DailyWeatherSummary.objects.update_or_create(            # Update or create the summary
+            summary, created = DailyWeatherSummary.objects.update_or_create(
                 city=city,
                 date=today,
                 defaults={
